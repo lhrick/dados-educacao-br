@@ -13,6 +13,21 @@ Ano de referência atual: **2025**. Matrículas e escolas vêm do Censo Escolar 
 
 > **Nunca some os alunos afetados de programas diferentes.** O mesmo estudante pode estar em vários deles. O total de alunos distintos nas redes públicas é **37.571.090** (Censo 2024).
 
+## Explorar os dados
+
+| Página | O que mostra | Baixar |
+|---|---|---|
+| Pé-de-Meia | beneficiários, valor pago e alcance sobre as matrículas do ensino médio | [pe_de_meia.html](docs/explorador/pe_de_meia.html) |
+| Fundeb | receita da rede municipal e parte que vem da União | [fundeb.html](docs/explorador/fundeb.html) |
+| Escola em Tempo Integral | fomento federal e matrículas em tempo integral fomentadas | [eti.html](docs/explorador/eti.html) |
+
+Para abrir uma página:
+1. Clique no link da página.
+2. No GitHub, clique em **Download raw file** (ícone de download, ao lado de "Raw").
+3. Abra o arquivo baixado no navegador.
+
+A página funciona offline e permite buscar o município, ver o mapa e a ficha com frases prontas e baixar a tabela em CSV. É para uso interno do time: leia os avisos da ficha e as observações no rodapé antes de publicar um número. Detalhes em [Explorador interativo](#4-explorador-interativo).
+
 ---
 
 ## Arquivos de saída
