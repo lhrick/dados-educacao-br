@@ -10,6 +10,10 @@ data/raw/*
 !data/raw/_manifest.csv
 data/interim/*
 data/processed/*
+!data/processed/educacao_municipios_2025.csv
+!data/processed/educacao_municipios_2025_dicionario.csv
+!data/processed/programas_explicacao_2025.csv
+!data/processed/programas_explicacao_2025_dicionario.csv
 !data/**/.gitkeep
 certs/_bundle.crt
 CLAUDE.md
