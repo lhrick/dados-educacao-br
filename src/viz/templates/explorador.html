@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITULO__</title>
+<!--
+  Explorador por município — template genérico.
+  Não conhece nenhum programa: tudo vem do JSON em <script id="dados">, gerado por
+  src/viz/explorador.py a partir de (tabela por cod_ibge_7) + (dicionário) + (config).
+  Componentes ativados pela config: resumo, mapa, ficha, graficos (por_uf, histograma,
+  dispersao), tabela.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --plano: #f9f9f7;
+  --superficie: #fcfcfb;
+  --superficie-2: #f3f2ee;
+  --tinta: #0b0b0b;
+  --tinta-2: #52514e;
+  --muda: #6f6d68;
+  --grade: #e1e0d9;
+  --eixo: #c3c2b7;
+  --borda: rgba(11, 11, 11, 0.12);
+  --destaque: #2a78d6;
+  --foco: #0d366b;
+  --critico: #e34948;
+  --zero: #e1e0d9;
+  --alerta-fundo: #fff4dc;
+  --alerta-borda: #fab219;
+  --estim-fundo: #f1ecfb;
+  --estim-tinta: #4a3aa7;
+  --uf-borda: #fcfcfb;
+  --c1: #b7d3f6; --c2: #6da7ec; --c3: #2a78d6; --c4: #1c5cab; --c5: #0d366b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plano: #0d0d0d;
+    --superficie: #1a1a19;
+    --superficie-2: #232321;
+    --tinta: #f0efec;
+    --tinta-2: #c3c2b7;
+    --muda: #9a988f;
+    --grade: #2c2c2a;
+    --eixo: #383835;
+    --borda: rgba(255, 255, 255, 0.12);
+    --destaque: #5598e7;
+    --foco: #cde2fb;
+    --critico: #e66767;
+    --zero: #383835;
+    --alerta-fundo: #3a2e10;
+    --alerta-borda: #c98500;
+    --estim-fundo: #2a2547;
+    --estim-tinta: #b9b1f2;
+    --uf-borda: #1a1a19;
+    --c1: #184f95; --c2: #2a78d6; --c3: #5598e7; --c4: #86b6ef; --c5: #cde2fb;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plano: #0d0d0d;
+  --superficie: #1a1a19;
+  --superficie-2: #232321;
+  --tinta: #f0efec;
+  --tinta-2: #c3c2b7;
+  --muda: #9a988f;
+  --grade: #2c2c2a;
+  --eixo: #383835;
+  --borda: rgba(255, 255, 255, 0.12);
+  --destaque: #5598e7;
+  --foco: #cde2fb;
+  --critico: #e66767;
+  --zero: #383835;
+  --alerta-fundo: #3a2e10;
+  --alerta-borda: #c98500;
+  --estim-fundo: #2a2547;
+  --estim-tinta: #b9b1f2;
+  --uf-borda: #1a1a19;
+  --c1: #184f95; --c2: #2a78d6; --c3: #5598e7; --c4: #86b6ef; --c5: #cde2fb;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--plano);
+  color: var(--tinta);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+[hidden] { display: none !important; }
+.pagina { max-width: 1240px; margin: 0 auto; padding: 28px 16px 48px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
+.subtitulo { color: var(--tinta-2); margin: 0 0 20px; max-width: 72ch; }
+.num { font-variant-numeric: tabular-nums; }
+.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 12px; }
+.secao { margin-top: 16px; }
+
+/* controles */
+.controles { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 16px; }
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 100%; }
+.campo label { font-size: 12px; color: var(--muda); }
+.campo select { max-width: 100%; text-overflow: ellipsis; }
+@media (max-width: 560px) { .campo { flex: 1 1 100%; } .busca { max-width: none !important; } }
+input[type="search"], select {
+  font: inherit; color: var(--tinta); background: var(--superficie);
+  border: 1px solid var(--borda); border-radius: 8px; padding: 8px 10px; min-height: 40px;
+}
+input[type="search"]:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--destaque); outline-offset: 1px;
+}
+.busca { position: relative; flex: 1 1 280px; max-width: 420px; }
+.busca input { width: 100%; }
+.sugestoes {
+  position: absolute; z-index: 20; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 4px;
+  list-style: none; background: var(--superficie); border: 1px solid var(--borda); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); max-height: 320px; overflow: auto;
+}
+.sugestoes li { padding: 7px 10px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
+.sugestoes li[aria-selected="true"], .sugestoes li:hover { background: var(--superficie-2); }
+.sugestoes .uf { color: var(--muda); font-size: 13px; }
+button {
+  font: inherit; color: var(--tinta); background: var(--superficie); cursor: pointer;
+  border: 1px solid var(--borda); border-radius: 8px; padding: 6px 12px; min-height: 36px;
+}
+button:hover { background: var(--superficie-2); }
+
+/* resumo */
+.resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.resumo .item { padding: 12px 14px; }
+.resumo .rot { font-size: 12.5px; color: var(--tinta-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.resumo .val { font-size: 22px; font-weight: 600; margin-top: 2px; }
+.resumo .escopo { font-size: 12px; color: var(--muda); }
+.resumo .unid { font-size: 13px; font-weight: 400; color: var(--tinta-2); margin-left: 4px; }
+
+/* grade principal */
+.principal { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .principal { grid-template-columns: minmax(0, 1fr); } }
+
+/* mapa */
+.mapa-cartao { padding: 14px 14px 10px; position: relative; }
+.mapa-topo { display: flex; justify-content: space-between; align-items: start; gap: 12px; flex-wrap: wrap; }
+.mapa-titulo { font-weight: 600; font-size: 14px; margin: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.zoom { display: flex; gap: 4px; }
+.zoom button { min-width: 36px; padding: 4px 8px; }
+.mapa-area { position: relative; margin-top: 8px; touch-action: none; }
+svg.mapa { display: block; width: 100%; height: auto; max-height: 72vh; cursor: grab; user-select: none; }
+svg.mapa.arrastando { cursor: grabbing; }
+.mun { stroke: var(--superficie); stroke-width: 0.25px; vector-effect: non-scaling-stroke; }
+.mun.esmaecido { opacity: 0.18; }
+.ufs path { fill: none; stroke: var(--uf-borda); stroke-width: 1.1px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.selecao { fill: none; stroke: var(--foco); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.realce { fill: none; stroke: var(--tinta); stroke-width: 1.2px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 2px 2px; font-size: 12.5px; color: var(--tinta-2); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.dica { font-size: 12px; color: var(--muda); margin: 6px 2px 0; }
+
+.tooltip {
+  position: fixed; z-index: 30; pointer-events: none; min-width: 180px; max-width: 300px;
+  background: var(--superficie); color: var(--tinta); border: 1px solid var(--borda); border-radius: 8px;
+  padding: 8px 10px; font-size: 13px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+.tooltip strong { display: block; margin-bottom: 4px; }
+.tooltip .linha { display: flex; justify-content: space-between; gap: 12px; color: var(--tinta-2); }
+.tooltip .linha b { color: var(--tinta); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ficha */
+.ficha { padding: 18px; }
+.ficha-vazia { color: var(--muda); padding: 28px 8px; text-align: center; }
+.ficha h2 { font-size: 22px; margin: 0; line-height: 1.2; }
+.ficha .local { color: var(--muda); font-size: 13px; margin: 2px 0 14px; }
+.metricas { display: grid; gap: 0; margin: 0; }
+.metrica { padding: 10px 0; border-top: 1px solid var(--grade); }
+.metrica dt { font-size: 13px; color: var(--tinta-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.metrica dd { margin: 2px 0 0; }
+.metrica .valor { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.metrica .compara { font-size: 12.5px; color: var(--muda); font-variant-numeric: tabular-nums; }
+.info { padding: 0; min-height: 0; width: 18px; height: 18px; border-radius: 50%;
+  color: var(--muda); font-size: 12px; line-height: 16px; border: 1px solid var(--borda); cursor: help; }
+.descricao { font-size: 12.5px; color: var(--muda); margin: 4px 0 0; }
+.selo { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--estim-fundo); color: var(--estim-tinta); font-weight: 500; }
+.alerta { background: var(--alerta-fundo); border-left: 3px solid var(--alerta-borda); border-radius: 6px;
+  padding: 8px 10px; font-size: 13px; margin: 0 0 12px; }
+.alerta::before { content: "⚠ "; }
+.textos { margin-top: 14px; display: grid; gap: 8px; }
+.texto { background: var(--superficie-2); border-radius: 8px; padding: 10px 12px; font-size: 14px;
+  display: flex; gap: 10px; align-items: start; justify-content: space-between; }
+.texto button { flex: none; font-size: 12.5px; min-height: 30px; padding: 3px 10px; }
+.textos-titulo { font-size: 12px; color: var(--muda); margin: 0; }
+
+/* gráficos */
+.graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+.grafico { padding: 14px; min-width: 0; }
+.grafico h3 { font-size: 15px; margin: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.grafico .sub { font-size: 12.5px; color: var(--muda); margin: 2px 0 10px; }
+.grafico .nota { font-size: 12px; color: var(--muda); margin: 8px 0 0; }
+.grafico svg { display: block; width: 100%; max-width: 720px; height: auto; overflow: visible; }
+.barras-uf { display: grid; gap: 2px; }
+.barra-uf { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px;
+  align-items: center; padding: 2px 4px; border-radius: 4px; cursor: pointer; font-size: 12.5px; }
+.barra-uf:hover { background: var(--superficie-2); }
+.barra-uf:focus-visible { outline: 2px solid var(--destaque); }
+.barra-uf .trilho { height: 13px; }
+.barra-uf .trilho i { display: block; height: 100%; background: var(--destaque); border-radius: 0 4px 4px 0; min-width: 1px; }
+.barra-uf .v { color: var(--tinta-2); font-variant-numeric: tabular-nums; min-width: 72px; text-align: right; }
+.barras-uf.com-foco .barra-uf:not(.ativo) .trilho i { opacity: 0.35; }
+.barra-uf.ativo { font-weight: 600; }
+.eixo text, .rot-svg { fill: var(--muda); font-size: 11px; font-family: inherit; paint-order: stroke; stroke: var(--superficie); stroke-width: 3px; stroke-linejoin: round; }
+.eixo line, .eixo path { stroke: var(--eixo); }
+.gradeh { stroke: var(--grade); }
+.ponto { fill: var(--destaque); opacity: 0.45; }
+.ponto.marcado { fill: var(--critico); opacity: 0.95; }
+.ponto.fora { opacity: 0.06; }
+.alvo { fill: none; stroke: var(--foco); stroke-width: 2.5; pointer-events: none; }
+.coluna { fill: var(--destaque); }
+.coluna:hover, .ponto:hover { opacity: 1; }
+.interno { margin-top: 16px; }
+.interno > summary { padding: 14px; cursor: pointer; font-weight: 600; list-style-position: inside; }
+.interno > summary small { font-weight: 400; color: var(--muda); margin-left: 6px; }
+.interno .graficos { padding: 0 14px 14px; }
+.interno .grafico { border: 1px solid var(--grade); border-radius: 10px; }
+
+/* tabela */
+.tabela-cartao { padding: 14px 0 0; }
+.tabela-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 14px 10px; flex-wrap: wrap; }
+.tabela-topo h2 { font-size: 16px; margin: 0; }
+.tabela-topo .contagem { color: var(--muda); font-size: 13px; }
+.rolagem { overflow: auto; max-height: 520px; border-top: 1px solid var(--grade); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 7px 14px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grade); }
+th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+thead th { position: sticky; top: 0; background: var(--superficie); font-weight: 600; font-size: 12.5px; color: var(--tinta-2); z-index: 1; }
+thead th button { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+thead th button:focus-visible { outline: 2px solid var(--destaque); }
+thead th[aria-sort] button::after { content: "↓"; font-size: 11px; }
+thead th[aria-sort="ascending"] button::after { content: "↑"; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--superficie-2); }
+tbody tr.ativo { background: var(--superficie-2); box-shadow: inset 3px 0 0 var(--destaque); }
+td.vazio { color: var(--muda); }
+.mais { padding: 10px 14px; }
+
+/* rodapé */
+.rodape { margin-top: 24px; font-size: 13px; color: var(--tinta-2); }
+.rodape h3 { font-size: 13px; margin: 14px 0 4px; color: var(--tinta); }
+.rodape ul { margin: 0; padding-left: 18px; }
+.rodape p { margin: 10px 0 0; color: var(--muda); }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header>
+    <h1 id="titulo"></h1>
+    <p class="subtitulo" id="subtitulo"></p>
+  </header>
+
+  <div class="controles">
+    <div class="campo busca">
+      <label for="busca">Buscar município</label>
+      <input id="busca" type="search" autocomplete="off" placeholder="Digite o nome da cidade"
+             role="combobox" aria-expanded="false" aria-controls="sugestoes" aria-autocomplete="list">
+      <ul id="sugestoes" class="sugestoes" role="listbox" hidden></ul>
+    </div>
+    <div class="campo">
+      <label for="filtro-uf">Estado</label>
+      <select id="filtro-uf"><option value="">Brasil</option></select>
+    </div>
+    <div class="campo" id="campo-metrica">
+      <label for="metrica-mapa">Cor do mapa</label>
+      <select id="metrica-mapa"></select>
+    </div>
+  </div>
+
+  <section class="resumo" id="resumo" aria-label="Resumo" hidden></section>
+
+  <div class="principal">
+    <section class="cartao mapa-cartao" aria-label="Mapa">
+      <div class="mapa-topo">
+        <p class="mapa-titulo" id="mapa-titulo"></p>
+        <div class="zoom">
+          <button type="button" id="zoom-mais" aria-label="Aproximar">+</button>
+          <button type="button" id="zoom-menos" aria-label="Afastar">−</button>
+          <button type="button" id="zoom-reset">Brasil</button>
+        </div>
+      </div>
+      <div class="mapa-area">
+        <svg class="mapa" id="mapa" role="img" aria-label="Mapa dos municípios">
+          <defs>
+            <pattern id="hachura" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="6" height="6" fill="var(--superficie)"></rect>
+              <line x1="0" y1="0" x2="0" y2="6" stroke="var(--muda)" stroke-width="2"></line>
+            </pattern>
+          </defs>
+          <g id="camada-mun"></g>
+          <g class="ufs" id="camada-uf"></g>
+          <path class="realce" id="realce"></path>
+          <path class="selecao" id="selecao"></path>
+        </svg>
+      </div>
+      <div class="legenda" id="legenda"></div>
+      <p class="dica">Passe o mouse para ver os números; clique para abrir a ficha. Role para aproximar e arraste para mover.</p>
+    </section>
+
+    <section class="cartao ficha" id="ficha" aria-live="polite"></section>
+  </div>
+
+  <div class="graficos secao" id="graficos" hidden></div>
+
+  <section class="cartao tabela-cartao secao" aria-label="Tabela">
+    <div class="tabela-topo">
+      <div><h2>Todos os municípios</h2><span class="contagem" id="contagem"></span></div>
+      <button type="button" id="exportar">Baixar CSV</button>
+    </div>
+    <div class="rolagem">
+      <table>
+        <thead><tr id="cabecalho"></tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+    <div class="mais" id="mais"></div>
+  </section>
+
+  <details class="cartao interno" id="interno" hidden>
+    <summary>Conferência <small>uso interno — checagens antes de publicar</small></summary>
+    <div class="graficos" id="graficos-internos"></div>
+  </details>
+
+  <footer class="rodape" id="rodape"></footer>
+</div>
+
+<div class="tooltip" id="tooltip" hidden></div>
+
+<script type="application/json" id="dados">/*__DADOS__*/{}</script>
+<script>
+(function () {
+  "use strict";
+  const D = JSON.parse(document.getElementById("dados").textContent);
+  const C = D.config, M = D.metricas, L = D.linhas;
+  const N = L.cod.length;
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const CORES = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)"];
+
+  // ------------------------------------------------------------ formatação pt-BR
+  const nf = (casas) => new Intl.NumberFormat("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  const NF0 = nf(0), NF1 = nf(1), NF2 = nf(2);
+  function reais(v) {
+    const a = Math.abs(v);
+    if (a >= 1e9) return "R$ " + NF2.format(v / 1e9) + " bi";
+    if (a >= 1e6) return "R$ " + NF1.format(v / 1e6) + " mi";
+    if (a >= 1e4 || Number.isInteger(v)) return "R$ " + NF0.format(v);
+    return "R$ " + NF2.format(v);
+  }
+  function fmt(col, v, curto) {
+    if (v === null || v === undefined || Number.isNaN(v)) return "—";
+    const f = (M[col] && M[col].formato) || "decimal";
+    if (f === "inteiro") return NF0.format(v);
+    if (f === "reais") return curto ? reais(v) : (Math.abs(v) >= 1e6 ? reais(v) : "R$ " + NF2.format(v));
+    if (f === "pct") return (curto ? NF0 : NF1).format(v * 100) + "%";
+    if (f === "booleano") return v ? "sim" : "não";
+    return NF2.format(v);
+  }
+  // agregado de booleano = contagem de municípios
+  const fmtAgg = (col, v) => M[col].agregado === "contagem" ? `${NF0.format(v)} municípios` : fmt(col, v);
+  const rotulo = (col) => (M[col] && (M[col].rotulo || M[col].descricao)) || col;
+  const curto = (col) => (M[col] && M[col].curto) || rotulo(col);
+  const val = (col, i) => L.valores[col][i];
+  const semAcento = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  function el(tag, attrs, texto) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+  }
+  function sv(tag, attrs, texto) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+  }
+  function seloEstimativa(col, pai) {
+    if (M[col] && M[col].tipo === "estimativa") pai.appendChild(el("span", { class: "selo", title: "Rateio ou aproximação — não é número oficial" }, "estimativa"));
+  }
+
+  // ------------------------------------------------------------ índices
+  const idx = new Map(L.cod.map((c, i) => [c, i]));
+  const nomeBusca = L.nome.map(semAcento);
+  const ufs = [...new Set(L.uf)].sort();
+  const porUf = new Map(ufs.map((u) => [u, []]));
+  L.uf.forEach((u, i) => porUf.get(u).push(i));
+  const todos = [...Array(N).keys()];
+
+  // agregados conforme config.metricas[col].agregado: soma | mediana | contagem | {razao: [num, den]}
+  const cacheAgg = new Map();
+  function agregado(col, escopo) {
+    const k = col + "|" + escopo;
+    if (cacheAgg.has(k)) return cacheAgg.get(k);
+    const indices = escopo === "BR" ? todos : porUf.get(escopo);
+    const a = M[col].agregado;
+    let r = null;
+    const soma = (c) => indices.reduce((s, i) => s + (val(c, i) || 0), 0);
+    if (a === "soma" || a === "contagem") r = soma(col);
+    else if (a === "mediana") {
+      const xs = indices.map((i) => val(col, i)).filter((v) => v !== null).sort((x, y) => x - y);
+      r = xs.length ? (xs.length % 2 ? xs[(xs.length - 1) / 2] : (xs[xs.length / 2 - 1] + xs[xs.length / 2]) / 2) : null;
+    } else if (a && a.razao) {
+      const den = soma(a.razao[1]);
+      r = den ? soma(a.razao[0]) / den : null;
+    }
+    cacheAgg.set(k, r);
+    return r;
+  }
+
+  // ------------------------------------------------------------ estado + assinantes
+  const estado = { sel: null, uf: "", mapa: 0, ordem: C.ordem_tabela || C.tabela[0], asc: false, limite: 200 };
+  const aoMudarUf = [], aoSelecionar = [];
+  const escopoAtual = () => estado.uf || "BR";
+  const noEscopo = (i) => !estado.uf || L.uf[i] === estado.uf;
+
+  // ------------------------------------------------------------ tooltip genérico
+  const tip = $("tooltip");
+  function mostrarTip(ev, titulo, linhas) {
+    tip.replaceChildren(el("strong", {}, titulo));
+    linhas.forEach(([r, v]) => { const d = el("div", { class: "linha" }); d.append(el("span", {}, r), el("b", {}, v)); tip.appendChild(d); });
+    tip.hidden = false;
+    const b = tip.getBoundingClientRect();
+    let x = ev.clientX + 14, y = ev.clientY + 14;
+    if (x + b.width > innerWidth - 8) x = ev.clientX - b.width - 14;
+    if (y + b.height > innerHeight - 8) y = ev.clientY - b.height - 14;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function esconderTip() { tip.hidden = true; $("realce").setAttribute("d", ""); }
+  const linhasTooltip = (i, primeira) => [primeira, ...(C.tooltip || []).filter((c) => c !== primeira)]
+    .filter(Boolean).map((c) => [curto(c), fmt(c, val(c, i), true)]);
+
+  // ------------------------------------------------------------ cabeçalho e rodapé
+  $("titulo").textContent = C.titulo;
+  $("subtitulo").textContent = C.subtitulo || "";
+  ufs.forEach((u) => $("filtro-uf").add(new Option(u, u)));
+  C.mapa.forEach((m, k) => {
+    const est = M[m.coluna].tipo === "estimativa" ? " (estimativa)" : "";
+    $("metrica-mapa").add(new Option((m.titulo || rotulo(m.coluna)) + est, k));
+  });
+  if (C.mapa.length < 2) $("campo-metrica").hidden = true;
+
+  (function rodape() {
+    const r = $("rodape");
+    const lista = (titulo, itens) => {
+      if (!itens || !itens.length) return;
+      r.appendChild(el("h3", {}, titulo));
+      const ul = el("ul"); itens.forEach((n) => ul.appendChild(el("li", {}, n))); r.appendChild(ul);
+    };
+    lista("Como ler", C.notas);
+    lista("Observações", C.observacoes);
+    lista("Fontes", C.fontes);
+    r.appendChild(el("p", { id: "gerado" }, `Ano de referência: ${C.ano_ref}. Página gerada em ${D.gerado_em.split("-").reverse().join("/")} a partir de ${C.fonte_tabela}.`));
+  })();
+
+  // ------------------------------------------------------------ resumo
+  (function resumo() {
+    if (!C.resumo || !C.resumo.length) return;
+    const box = $("resumo"); box.hidden = false;
+    const itens = C.resumo.map((col) => {
+      const c = el("div", { class: "cartao item" });
+      const r = el("div", { class: "rot" }, curto(col)); seloEstimativa(col, r);
+      const v = el("div", { class: "val num" });
+      const e = el("div", { class: "escopo" });
+      c.append(r, v, e); box.appendChild(c);
+      return { col, v, e };
+    });
+    const atualizar = () => itens.forEach(({ col, v, e }) => {
+      const a = agregado(col, escopoAtual());
+      if (M[col].agregado === "contagem") v.replaceChildren(NF0.format(a), el("span", { class: "unid" }, "municípios"));
+      else v.textContent = fmt(col, a);
+      e.textContent = estado.uf ? `${estado.uf} · Brasil: ${fmtAgg(col, agregado(col, "BR"))}` : "Brasil";
+    });
+    atualizar(); aoMudarUf.push(atualizar);
+  })();
+
+  // ------------------------------------------------------------ mapa
+  const svg = $("mapa");
+  const W = D.malha.largura, H = D.malha.altura;
+  const caminhos = new Map();
+  (function desenhar() {
+    const frag = document.createDocumentFragment();
+    for (const [cod, d] of Object.entries(D.malha.municipios)) {
+      if (!idx.has(cod)) continue;
+      const p = sv("path", { d, class: "mun" });
+      p.dataset.cod = cod;
+      frag.appendChild(p); caminhos.set(cod, p);
+    }
+    $("camada-mun").appendChild(frag);
+    D.malha.ufs.forEach((d) => $("camada-uf").appendChild(sv("path", { d })));
+  })();
+  const semMalha = L.cod.filter((c) => !caminhos.has(c)).map((c) => `${L.nome[idx.get(c)]} (${L.uf[idx.get(c)]})`);
+
+  // classe: -1 sem dado, "z" zero (se a config tiver "zero"), 0..n faixas
+  function classe(v, m) {
+    if (v === null || v === undefined) return -1;
+    if (m.zero && v === 0) return "z";
+    let k = 0;
+    while (k < m.faixas.length && v > m.faixas[k]) k++;
+    return k;
+  }
+  function rotulosFaixas(m) {
+    const s = (v) => fmt(m.coluna, v, true), f = m.faixas;
+    const ini = m.zero && f[0] === 0 ? [] : [`até ${s(f[0])}`];
+    const meio = f.slice(1).map((v, k) => (m.zero && k === 0 && f[0] === 0 ? `acima de 0 a ${s(v)}` : `${s(f[k])} a ${s(v)}`));
+    return [...ini, ...meio, `mais de ${s(f[f.length - 1])}`];
+  }
+  function pintar() {
+    const m = C.mapa[estado.mapa];
+    const desloc = m.zero && m.faixas[0] === 0 ? 1 : 0;  // com "zero" e faixa 0, a classe 0 fica vazia
+    const cont = new Array(m.faixas.length + 1).fill(0);
+    let nulos = 0, zeros = 0;
+    for (const [cod, p] of caminhos) {
+      const i = idx.get(cod);
+      const k = classe(val(m.coluna, i), m);
+      if (k === -1) { p.style.fill = "url(#hachura)"; nulos++; }
+      else if (k === "z") { p.style.fill = "var(--zero)"; zeros++; }
+      else { p.style.fill = CORES[k - desloc]; cont[k]++; }
+      p.classList.toggle("esmaecido", !noEscopo(i));
+    }
+    const t = $("mapa-titulo");
+    t.textContent = m.titulo || rotulo(m.coluna);
+    seloEstimativa(m.coluna, t);
+    const leg = $("legenda");
+    leg.replaceChildren();
+    const item = (fundo, texto, borda) => {
+      const s = el("span"); const i = el("i"); i.style.background = fundo; if (borda) i.style.border = "1px solid var(--borda)";
+      s.append(i, texto); leg.appendChild(s);
+    };
+    if (m.zero) item("var(--zero)", `${m.zero} (${NF0.format(zeros)})`);
+    rotulosFaixas(m).forEach((txt, k) => item(CORES[k], `${txt} (${NF0.format(cont[k + desloc])})`));
+    if (nulos) item("url(#hachura)", `${m.nulo || "sem dado"} (${NF0.format(nulos)})`, true);
+  }
+  aoMudarUf.push(pintar);
+
+  // zoom e arraste via viewBox
+  const vb = { x: 0, y: 0, w: W, h: H };
+  const aplicarVB = () => svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  aplicarVB();
+  function limitar() {
+    vb.w = Math.min(Math.max(vb.w, W / 60), W);
+    vb.h = vb.w * H / W;
+    vb.x = Math.min(Math.max(vb.x, -vb.w * 0.5), W - vb.w * 0.5);
+    vb.y = Math.min(Math.max(vb.y, -vb.h * 0.5), H - vb.h * 0.5);
+  }
+  function zoomEm(fator, cx, cy) {
+    const nw = vb.w * fator;
+    vb.x = cx - (cx - vb.x) * (nw / vb.w);
+    vb.y = cy - (cy - vb.y) * (nw / vb.w);
+    vb.w = nw; limitar(); aplicarVB();
+  }
+  function pontoSvg(ev) {
+    const r = svg.getBoundingClientRect();
+    return { x: vb.x + (ev.clientX - r.left) / r.width * vb.w, y: vb.y + (ev.clientY - r.top) / r.height * vb.h };
+  }
+  function enquadrar(bb, margem) {
+    let w = bb.width * (1 + 2 * margem), h = bb.height * (1 + 2 * margem);
+    if (w / h < W / H) w = h * W / H;
+    vb.w = Math.max(w, W / 7);
+    vb.h = vb.w * H / W;
+    vb.x = bb.x + bb.width / 2 - vb.w / 2;
+    vb.y = bb.y + bb.height / 2 - vb.h / 2;
+    limitar(); aplicarVB();
+  }
+  const verBrasil = () => { Object.assign(vb, { x: 0, y: 0, w: W, h: H }); aplicarVB(); };
+  function bboxUf(uf) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const i of porUf.get(uf)) {
+      const p = caminhos.get(L.cod[i]);
+      if (!p) continue;
+      const b = p.getBBox();
+      x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
+    }
+    return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+  }
+  svg.addEventListener("wheel", (ev) => {
+    ev.preventDefault();
+    const p = pontoSvg(ev);
+    zoomEm(ev.deltaY > 0 ? 1.2 : 1 / 1.2, p.x, p.y);
+  }, { passive: false });
+  let arraste = null;
+  svg.addEventListener("pointerdown", (ev) => { arraste = { x: ev.clientX, y: ev.clientY, vx: vb.x, vy: vb.y, moveu: false }; });
+  window.addEventListener("pointermove", (ev) => {
+    if (!arraste) return;
+    const dx = ev.clientX - arraste.x, dy = ev.clientY - arraste.y;
+    if (!arraste.moveu && Math.hypot(dx, dy) < 4) return;
+    if (!arraste.moveu) { arraste.moveu = true; svg.classList.add("arrastando"); esconderTip(); }
+    const r = svg.getBoundingClientRect();
+    vb.x = arraste.vx - dx / r.width * vb.w;
+    vb.y = arraste.vy - dy / r.height * vb.h;
+    limitar(); aplicarVB();
+  });
+  window.addEventListener("pointerup", (ev) => {
+    if (!arraste) return;
+    const clique = !arraste.moveu;
+    arraste = null; svg.classList.remove("arrastando");
+    if (clique && ev.target.dataset && ev.target.dataset.cod) selecionar(ev.target.dataset.cod, false);
+  });
+  $("zoom-mais").onclick = () => zoomEm(1 / 1.5, vb.x + vb.w / 2, vb.y + vb.h / 2);
+  $("zoom-menos").onclick = () => zoomEm(1.5, vb.x + vb.w / 2, vb.y + vb.h / 2);
+  $("zoom-reset").onclick = () => (estado.uf ? enquadrar(bboxUf(estado.uf), 0.05) : verBrasil());
+  svg.addEventListener("pointermove", (ev) => {
+    if (arraste && arraste.moveu) return;
+    const cod = ev.target.dataset && ev.target.dataset.cod;
+    if (!cod) { esconderTip(); return; }
+    const i = idx.get(cod);
+    mostrarTip(ev, `${L.nome[i]} (${L.uf[i]})`, linhasTooltip(i, C.mapa[estado.mapa].coluna));
+    $("realce").setAttribute("d", ev.target.getAttribute("d"));
+  });
+  svg.addEventListener("pointerleave", esconderTip);
+
+  // ------------------------------------------------------------ ficha
+  function ficha() {
+    const f = $("ficha");
+    f.replaceChildren();
+    if (estado.sel === null) {
+      const v = el("div", { class: "ficha-vazia" });
+      v.appendChild(el("p", {}, "Busque uma cidade, clique no mapa ou em uma linha da tabela para ver os números do município."));
+      const c0 = C.ficha[0];
+      v.appendChild(el("p", { class: "num" }, `${rotulo(c0)} no Brasil: ${fmtAgg(c0, agregado(c0, "BR"))}`));
+      f.appendChild(v);
+      return;
+    }
+    const i = estado.sel, uf = L.uf[i];
+    f.append(el("h2", {}, L.nome[i]), el("p", { class: "local" }, `${uf} · código IBGE ${L.cod[i]}`));
+    // alerta dispara quando a coluna é verdadeira, ou quando é igual a "valor" (se a config definir)
+    (C.alertas || []).forEach((a) => {
+      const v = val(a.coluna, i);
+      if (a.valor === undefined ? !!v : v === a.valor) f.appendChild(el("p", { class: "alerta" }, a.mensagem));
+    });
+
+    const dl = el("dl", { class: "metricas" });
+    C.ficha.forEach((col, k) => {
+      const meta = M[col];
+      const wrap = el("div", { class: "metrica" });
+      const dt = el("dt", {}, rotulo(col));
+      seloEstimativa(col, dt);
+      const desc = el("p", { class: "descricao", id: `desc-${k}` }, [meta.descricao, meta.fonte && `Fonte: ${meta.fonte}`].filter(Boolean).join(" — "));
+      desc.hidden = true;
+      if (meta.descricao) {
+        const b = el("button", { class: "info", type: "button", "aria-label": `O que é: ${rotulo(col)}`, "aria-expanded": "false", "aria-controls": desc.id }, "?");
+        b.onclick = () => { desc.hidden = !desc.hidden; b.setAttribute("aria-expanded", String(!desc.hidden)); };
+        dt.appendChild(b);
+      }
+      const dd = el("dd");
+      dd.appendChild(el("div", { class: "valor" }, fmt(col, val(col, i))));
+      if (meta.agregado) {
+        const tot = { soma: " (total)", mediana: " (mediana)" }[meta.agregado] || "";
+        dd.appendChild(el("div", { class: "compara" }, `${uf}${tot}: ${fmtAgg(col, agregado(col, uf))} · Brasil${tot}: ${fmtAgg(col, agregado(col, "BR"))}`));
+      }
+      dd.appendChild(desc);
+      wrap.append(dt, dd); dl.appendChild(wrap);
+    });
+    f.appendChild(dl);
+
+    const textos = (C.textos || []).map((c) => val(c, i)).filter(Boolean);
+    if (textos.length) {
+      const box = el("div", { class: "textos" });
+      box.appendChild(el("p", { class: "textos-titulo" }, "Frases prontas"));
+      textos.forEach((txt) => {
+        const d = el("div", { class: "texto" });
+        const s = el("span", {}, txt);
+        const b = el("button", { type: "button" }, "Copiar");
+        b.onclick = async () => {
+          try { await navigator.clipboard.writeText(txt); b.textContent = "Copiado"; }
+          catch (e) { const r = document.createRange(); r.selectNodeContents(s); getSelection().removeAllRanges(); getSelection().addRange(r); b.textContent = "Selecionado"; }
+          setTimeout(() => (b.textContent = "Copiar"), 1500);
+        };
+        d.append(s, b); box.appendChild(d);
+      });
+      f.appendChild(box);
+    }
+  }
+
+  function selecionar(cod, enquadrarMapa) {
+    const i = idx.get(cod);
+    if (i === undefined) return;
+    estado.sel = i;
+    const p = caminhos.get(cod);
+    $("selecao").setAttribute("d", p ? p.getAttribute("d") : "");
+    if (p && enquadrarMapa) enquadrar(p.getBBox(), 1);
+    history.replaceState(null, "", "#" + cod);
+    ficha();
+    aoSelecionar.forEach((fn) => fn());
+  }
+
+  // ------------------------------------------------------------ gráficos (config.graficos)
+  function cartaoGrafico(g, destino) {
+    const c = el("section", { class: "cartao grafico" });
+    const h = el("h3", {}, g.titulo || "");
+    [g.coluna, g.x, g.y].filter(Boolean).forEach((col) => { if (M[col] && M[col].tipo === "estimativa" && !h.querySelector(".selo")) seloEstimativa(col, h); });
+    c.appendChild(h);
+    if (g.subtitulo) c.appendChild(el("p", { class: "sub" }, g.subtitulo));
+    const corpo = el("div"); c.appendChild(corpo);
+    if (g.nota) c.appendChild(el("p", { class: "nota" }, g.nota));
+    destino.appendChild(c);
+    return corpo;
+  }
+
+  // barras por UF (agregado da coluna); clique filtra o estado
+  function graficoPorUf(g, corpo) {
+    const dados = ufs.map((u) => ({ u, v: agregado(g.coluna, u) })).filter((d) => d.v !== null && !(g.ocultar_zero && d.v === 0));
+    dados.sort((a, b) => b.v - a.v);
+    const max = Math.max(...dados.map((d) => d.v));
+    const box = el("div", { class: "barras-uf", role: "list" });
+    const linhas = dados.map((d) => {
+      const b = el("button", { class: "barra-uf", type: "button", role: "listitem", "aria-label": `${d.u}: ${fmtAgg(g.coluna, d.v)}. Filtrar este estado.` });
+      const tr = el("span", { class: "trilho" }); const bar = el("i"); bar.style.width = (d.v / max * 100) + "%"; tr.appendChild(bar);
+      b.append(el("span", {}, d.u), tr, el("span", { class: "v" }, fmt(g.coluna, d.v, true)));
+      b.onclick = () => filtrarUf(estado.uf === d.u ? "" : d.u);
+      box.appendChild(b);
+      return { b, u: d.u };
+    });
+    corpo.appendChild(box);
+    const atualizar = () => {
+      const foco = estado.uf || (estado.sel !== null ? L.uf[estado.sel] : "");
+      box.classList.toggle("com-foco", !!foco);
+      linhas.forEach(({ b, u }) => b.classList.toggle("ativo", u === foco));
+    };
+    atualizar(); aoMudarUf.push(atualizar); aoSelecionar.push(atualizar);
+  }
+
+  // escalas e eixos simples para SVG
+  const escala = (d0, d1, r0, r1, log) => {
+    const f = log ? Math.log10 : (v) => v;
+    const a = f(d0), b = f(d1);
+    return (v) => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  };
+
+  // histograma da coluna no escopo atual; marca o município selecionado
+  function graficoHistograma(g, corpo) {
+    const Wg = 640, Hg = 260, m = { t: 12, r: 12, b: 34, l: 44 };
+    const s = sv("svg", { viewBox: `0 0 ${Wg} ${Hg}`, role: "img", "aria-label": g.titulo || rotulo(g.coluna) });
+    corpo.appendChild(s);
+    const passo = g.passo;
+    const todosV = todos.map((i) => val(g.coluna, i)).filter((v) => v !== null);
+    const lo = Math.floor(Math.min(...todosV) / passo) * passo, hi = Math.ceil(Math.max(...todosV) / passo) * passo;
+    const nb = Math.round((hi - lo) / passo);
+    const x = escala(lo, hi, m.l, Wg - m.r);
+    function desenhar() {
+      s.replaceChildren();
+      const cont = new Array(nb).fill(0);
+      todos.forEach((i) => { const v = val(g.coluna, i); if (v !== null && noEscopo(i)) cont[Math.min(nb - 1, Math.floor((v - lo) / passo))]++; });
+      const ymax = Math.max(...cont) || 1;
+      const y = escala(0, ymax, Hg - m.b, m.t);
+      const ticksY = [0, Math.round(ymax / 2), ymax];
+      ticksY.forEach((t) => {
+        s.appendChild(sv("line", { class: "gradeh", x1: m.l, x2: Wg - m.r, y1: y(t), y2: y(t) }));
+        s.appendChild(sv("text", { class: "rot-svg", x: m.l - 6, y: y(t) + 4, "text-anchor": "end" }, NF0.format(t)));
+      });
+      cont.forEach((n, k) => {
+        if (!n) return;
+        const r = sv("rect", { class: "coluna", x: x(lo + k * passo) + 1, width: Math.max(1, x(lo + passo) - x(lo) - 2), y: y(n), height: y(0) - y(n), rx: 2 });
+        r.addEventListener("pointermove", (ev) => mostrarTip(ev, `${fmt(g.coluna, lo + k * passo, true)} a ${fmt(g.coluna, lo + (k + 1) * passo, true)}`, [["municípios", NF0.format(n)]]));
+        r.addEventListener("pointerleave", esconderTip);
+        s.appendChild(r);
+      });
+      const cada = Math.max(1, Math.ceil(nb / 8));
+      for (let k = 0; k <= nb; k += cada) {
+        s.appendChild(sv("text", { class: "rot-svg", x: x(lo + k * passo), y: Hg - m.b + 16, "text-anchor": "middle" }, fmt(g.coluna, lo + k * passo, true)));
+      }
+      s.appendChild(sv("line", { class: "gradeh", x1: m.l, x2: Wg - m.r, y1: y(0), y2: y(0), style: "stroke: var(--eixo)" }));
+      const med = agregadoMediana(g.coluna);
+      if (med !== null) {
+        s.appendChild(sv("line", { x1: x(med), x2: x(med), y1: m.t, y2: y(0), stroke: "var(--tinta)", "stroke-width": 1 }));
+        s.appendChild(sv("text", { class: "rot-svg", x: x(med) + 4, y: m.t + 10 }, `mediana ${fmt(g.coluna, med, true)}`));
+      }
+      if (estado.sel !== null && val(g.coluna, estado.sel) !== null) {
+        const v = val(g.coluna, estado.sel), xv = x(v);
+        const esq = med !== null && v < med;  // rótulo para o lado oposto ao da mediana
+        s.appendChild(sv("line", { x1: xv, x2: xv, y1: m.t + 16, y2: y(0), stroke: "var(--critico)", "stroke-width": 2 }));
+        s.appendChild(sv("text", { class: "rot-svg", x: xv + (esq ? -4 : 4), y: m.t + 26, "text-anchor": esq ? "end" : "start", style: "fill: var(--critico)" }, `${L.nome[estado.sel]}: ${fmt(g.coluna, v, true)}`));
+      }
+    }
+    function agregadoMediana(col) {
+      const xs = todos.filter(noEscopo).map((i) => val(col, i)).filter((v) => v !== null).sort((a, b) => a - b);
+      return xs.length ? xs[Math.floor(xs.length / 2)] : null;
+    }
+    desenhar(); aoMudarUf.push(desenhar); aoSelecionar.push(desenhar);
+  }
+
+  // dispersão x × y (log opcional); destaca linhas com a coluna "destaque" verdadeira
+  function graficoDispersao(g, corpo) {
+    const Wg = 640, Hg = 460, m = { t: 12, r: 16, b: 44, l: 58 };
+    const s = sv("svg", { viewBox: `0 0 ${Wg} ${Hg}`, role: "img", "aria-label": g.titulo || "" });
+    corpo.appendChild(s);
+    const pts = todos.filter((i) => val(g.x, i) > 0 && val(g.y, i) > 0);
+    const xs = pts.map((i) => val(g.x, i)), ys = pts.map((i) => val(g.y, i));
+    const d0 = g.log ? 10 ** Math.floor(Math.log10(Math.min(...xs, ...ys))) : 0;
+    const d1 = g.log ? 10 ** Math.ceil(Math.log10(Math.max(...xs, ...ys))) : Math.max(...xs, ...ys) * 1.05;
+    const x = escala(d0, d1, m.l, Wg - m.r, g.log), y = escala(d0, d1, Hg - m.b, m.t, g.log);
+    const ticks = [];
+    if (g.log) for (let v = d0; v <= d1; v *= 10) ticks.push(v); else for (let k = 0; k <= 5; k++) ticks.push(d1 * k / 5);
+    ticks.forEach((t) => {
+      s.appendChild(sv("line", { class: "gradeh", x1: x(t), x2: x(t), y1: m.t, y2: Hg - m.b }));
+      s.appendChild(sv("line", { class: "gradeh", x1: m.l, x2: Wg - m.r, y1: y(t), y2: y(t) }));
+      s.appendChild(sv("text", { class: "rot-svg", x: x(t), y: Hg - m.b + 16, "text-anchor": "middle" }, NF0.format(t)));
+      s.appendChild(sv("text", { class: "rot-svg", x: m.l - 6, y: y(t) + 4, "text-anchor": "end" }, NF0.format(t)));
+    });
+    s.appendChild(sv("text", { class: "rot-svg", x: (m.l + Wg - m.r) / 2, y: Hg - 6, "text-anchor": "middle" }, curto(g.x)));
+    s.appendChild(sv("text", { class: "rot-svg", transform: `translate(14 ${(m.t + Hg - m.b) / 2}) rotate(-90)`, "text-anchor": "middle" }, curto(g.y)));
+    if (g.diagonal) {
+      s.appendChild(sv("line", { x1: x(d0), y1: y(d0), x2: x(d1), y2: y(d1), stroke: "var(--muda)", "stroke-width": 1 }));
+      s.appendChild(sv("text", { class: "rot-svg", x: x(d1) - 4, y: y(d1) + 14, "text-anchor": "end" }, g.diagonal));
+    }
+    const camada = sv("g"); s.appendChild(camada);
+    const ordem = g.destaque ? pts.slice().sort((a, b) => (val(g.destaque, a) ? 1 : 0) - (val(g.destaque, b) ? 1 : 0)) : pts;
+    const circulos = new Map();
+    ordem.forEach((i) => {
+      const marc = g.destaque && val(g.destaque, i);
+      const c = sv("circle", { class: "ponto" + (marc ? " marcado" : ""), cx: x(val(g.x, i)), cy: y(val(g.y, i)), r: marc ? 3.6 : 2.2 });
+      c.dataset.i = i; camada.appendChild(c); circulos.set(i, c);
+    });
+    camada.addEventListener("pointermove", (ev) => {
+      const i = ev.target.dataset && ev.target.dataset.i;
+      if (i === undefined) return;
+      const k = +i;
+      mostrarTip(ev, `${L.nome[k]} (${L.uf[k]})`, [g.x, g.y, ...(g.extra || [])].map((c) => [curto(c), fmt(c, val(c, k), true)]));
+    });
+    camada.addEventListener("pointerleave", esconderTip);
+    camada.addEventListener("click", (ev) => { const i = ev.target.dataset && ev.target.dataset.i; if (i !== undefined) selecionar(L.cod[+i], true); });
+    const alvo = sv("circle", { class: "alvo", r: 8 }); alvo.style.display = "none"; s.appendChild(alvo);
+    const atualizar = () => {
+      circulos.forEach((c, i) => c.classList.toggle("fora", !noEscopo(i)));
+      const c = estado.sel !== null && circulos.get(estado.sel);
+      if (c) { alvo.setAttribute("cx", c.getAttribute("cx")); alvo.setAttribute("cy", c.getAttribute("cy")); alvo.style.display = ""; }
+      else alvo.style.display = "none";
+    };
+    atualizar(); aoMudarUf.push(atualizar); aoSelecionar.push(atualizar);
+  }
+
+  (function graficos() {
+    const tipos = { por_uf: graficoPorUf, histograma: graficoHistograma, dispersao: graficoDispersao };
+    (C.graficos || []).forEach((g) => {
+      const destino = g.interno ? $("graficos-internos") : $("graficos");
+      destino.hidden = false;
+      if (g.interno) $("interno").hidden = false;
+      tipos[g.tipo](g, cartaoGrafico(g, destino));
+    });
+  })();
+
+  // ------------------------------------------------------------ busca
+  const busca = $("busca"), lista = $("sugestoes");
+  let opcoes = [], ativa = -1;
+  function fecharLista() { lista.hidden = true; busca.setAttribute("aria-expanded", "false"); ativa = -1; }
+  function marcar(k) {
+    ativa = k;
+    [...lista.children].forEach((li, j) => li.setAttribute("aria-selected", String(j === k)));
+    if (k >= 0) { busca.setAttribute("aria-activedescendant", `op-${k}`); lista.children[k].scrollIntoView({ block: "nearest" }); }
+  }
+  function escolher(i) {
+    busca.value = `${L.nome[i]} (${L.uf[i]})`;
+    fecharLista();
+    selecionar(L.cod[i], true);
+  }
+  busca.addEventListener("input", () => {
+    const q = semAcento(busca.value.trim());
+    if (q.length < 2) { fecharLista(); return; }
+    const base = estado.uf ? porUf.get(estado.uf) : todos;
+    const comeca = [], contem = [];
+    for (const i of base) {
+      const n = nomeBusca[i];
+      if (n.startsWith(q)) comeca.push(i); else if (n.includes(q)) contem.push(i);
+    }
+    opcoes = comeca.concat(contem).slice(0, 12);
+    lista.replaceChildren(...opcoes.map((i, k) => {
+      const li = el("li", { id: `op-${k}`, role: "option" });
+      li.append(el("span", {}, L.nome[i]), el("span", { class: "uf" }, L.uf[i]));
+      li.addEventListener("mousedown", (e) => { e.preventDefault(); escolher(i); });
+      return li;
+    }));
+    if (!opcoes.length) { const li = el("li", {}, "Nenhum município encontrado"); li.style.cursor = "default"; lista.appendChild(li); }
+    lista.hidden = false; busca.setAttribute("aria-expanded", "true"); marcar(opcoes.length ? 0 : -1);
+  });
+  busca.addEventListener("keydown", (e) => {
+    if (lista.hidden) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); marcar(Math.min(ativa + 1, opcoes.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); marcar(Math.max(ativa - 1, 0)); }
+    else if (e.key === "Enter" && ativa >= 0) { e.preventDefault(); escolher(opcoes[ativa]); }
+    else if (e.key === "Escape") fecharLista();
+  });
+  busca.addEventListener("blur", () => setTimeout(fecharLista, 100));
+
+  // ------------------------------------------------------------ tabela
+  const colsTabela = C.tabela;
+  (function cabecalho() {
+    const tr = $("cabecalho");
+    const th = (txt, col) => {
+      const e = el("th", { scope: "col" });
+      const b = el("button", { type: "button" }, txt);
+      b.onclick = () => {
+        if (estado.ordem === col) estado.asc = !estado.asc;
+        else { estado.ordem = col; estado.asc = col === "__nome" || col === "__uf"; }
+        estado.limite = 200; tabela();
+      };
+      e.appendChild(b); e.dataset.col = col; tr.appendChild(e);
+    };
+    th("Município", "__nome"); th("UF", "__uf");
+    colsTabela.forEach((c) => th(curto(c) + (M[c].tipo === "estimativa" ? " *" : ""), c));
+  })();
+  function linhasFiltradas() {
+    const base = estado.uf ? porUf.get(estado.uf).slice() : todos.slice();
+    const o = estado.ordem, s = estado.asc ? 1 : -1;
+    const chave = o === "__nome" ? (i) => nomeBusca[i] : o === "__uf" ? (i) => L.uf[i] + nomeBusca[i] : (i) => val(o, i);
+    base.sort((a, b) => {
+      const x = chave(a), y = chave(b);
+      if (x === null || x === undefined) return 1;
+      if (y === null || y === undefined) return -1;
+      return (x < y ? -1 : x > y ? 1 : 0) * s;
+    });
+    return base;
+  }
+  function tabela() {
+    const linhas = linhasFiltradas();
+    document.querySelectorAll("#cabecalho th").forEach((th) => {
+      if (th.dataset.col === estado.ordem) th.setAttribute("aria-sort", estado.asc ? "ascending" : "descending");
+      else th.removeAttribute("aria-sort");
+    });
+    const frag = document.createDocumentFragment();
+    linhas.slice(0, estado.limite).forEach((i) => {
+      const tr = el("tr"); tr.dataset.cod = L.cod[i];
+      if (i === estado.sel) tr.className = "ativo";
+      tr.append(el("td", {}, L.nome[i]), el("td", {}, L.uf[i]));
+      colsTabela.forEach((c) => { const v = val(c, i); tr.appendChild(el("td", { class: v === null ? "num vazio" : "num" }, fmt(c, v, true))); });
+      frag.appendChild(tr);
+    });
+    $("corpo").replaceChildren(frag);
+    const est = colsTabela.some((c) => M[c].tipo === "estimativa") ? " · * estimativa" : "";
+    $("contagem").textContent = ` · ${NF0.format(linhas.length)} municípios${estado.uf ? " em " + estado.uf : ""}${est}`;
+    const mais = $("mais");
+    mais.replaceChildren();
+    if (linhas.length > estado.limite) {
+      const b = el("button", { type: "button" }, `Mostrar mais (${NF0.format(Math.min(500, linhas.length - estado.limite))} de ${NF0.format(linhas.length - estado.limite)} restantes)`);
+      b.onclick = () => { estado.limite += 500; tabela(); };
+      mais.appendChild(b);
+    }
+  }
+  aoMudarUf.push(tabela);
+  aoSelecionar.push(() => {
+    document.querySelectorAll("#corpo tr.ativo").forEach((tr) => tr.classList.remove("ativo"));
+    const tr = document.querySelector(`#corpo tr[data-cod="${L.cod[estado.sel]}"]`);
+    if (tr) tr.classList.add("ativo");
+  });
+  $("corpo").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr");
+    if (tr) { selecionar(tr.dataset.cod, true); $("mapa").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+  });
+
+  // exportar CSV (separador ;, decimal vírgula, UTF-8 com BOM — abre direto no Excel pt-BR)
+  $("exportar").onclick = () => {
+    const linhas = linhasFiltradas();
+    const esc = (s) => /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    const num = (v) => v === null || v === undefined ? "" : typeof v === "boolean" ? String(v) : String(v).replace(".", ",");
+    const cab = [C.chave, C.nome, C.uf, ...colsTabela].join(";");
+    const corpo = linhas.map((i) => [L.cod[i], esc(L.nome[i]), L.uf[i], ...colsTabela.map((c) => num(val(c, i)))].join(";"));
+    const blob = new Blob(["﻿" + [cab, ...corpo].join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = el("a", { download: `${C.id}_${C.ano_ref}${estado.uf ? "_" + estado.uf : ""}.csv` });
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  // ------------------------------------------------------------ filtros
+  function filtrarUf(uf) {
+    estado.uf = uf; estado.limite = 200;
+    $("filtro-uf").value = uf;
+    aoMudarUf.forEach((fn) => fn());
+    if (uf) enquadrar(bboxUf(uf), 0.05); else verBrasil();
+  }
+  $("filtro-uf").onchange = (e) => filtrarUf(e.target.value);
+  $("metrica-mapa").onchange = (e) => { estado.mapa = +e.target.value; pintar(); };
+
+  pintar(); ficha(); tabela();
+  if (semMalha.length) {
+    $("rodape").insertBefore(el("p", {}, `Fora do mapa (sem polígono na malha do IBGE): ${semMalha.join(", ")}. Aparece na busca e na tabela.`), $("gerado"));
+  }
+  // link direto: ...#<cod_ibge_7> abre a ficha do município
+  const inicial = decodeURIComponent(location.hash.slice(1));
+  if (idx.has(inicial)) selecionar(inicial, true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "id": "eti",
+  "titulo": "Escola em Tempo Integral por município",
+  "subtitulo": "Fomento federal pago em 2025 às redes municipais pelas matrículas em tempo integral criadas entre os Censos de 2022 e 2024 (Programa Escola em Tempo Integral).",
+  "ano_ref": 2025,
+  "fonte_tabela": "educacao_municipios_2025",
+  "chave": "cod_ibge_7",
+  "nome": "municipio",
+  "uf": "uf",
+
+  "metricas": {
+    "vl_fomento_eti_rede_municipal": {"rotulo": "Fomento recebido pela rede municipal", "curto": "Fomento", "formato": "reais", "agregado": "soma"},
+    "qtd_matriculas_eti_rede_municipal": {"rotulo": "Matrículas em tempo integral fomentadas (rede municipal)", "curto": "Matrículas fomentadas", "formato": "inteiro", "agregado": "soma"},
+    "registrou_politica_eti_rede_municipal": {"rotulo": "Registrou política de educação integral em tempo integral", "curto": "Registraram política", "formato": "booleano", "agregado": "contagem"},
+    "qtd_escolas_eti_rede_municipal": {"rotulo": "Escolas municipais com matrícula em tempo integral (Censo 2024)", "curto": "Escolas integrais", "formato": "inteiro", "agregado": "soma"},
+    "vl_eti_media_por_escola_rede_municipal": {"rotulo": "Média por escola municipal em tempo integral", "curto": "Por escola", "formato": "reais", "agregado": "mediana"},
+    "vl_fomento_eti_rede_estadual_est": {"rotulo": "Fomento da rede estadual atribuído ao município", "curto": "Rede estadual", "formato": "reais", "agregado": "soma"},
+    "afetados_eti": {"rotulo": "Matrículas fomentadas no município (rede municipal + estadual)", "curto": "Afetados", "formato": "inteiro", "agregado": "soma"}
+  },
+  "resumo": ["vl_fomento_eti_rede_municipal", "qtd_matriculas_eti_rede_municipal", "vl_fomento_eti_rede_estadual_est", "registrou_politica_eti_rede_municipal"],
+
+  "mapa": [
+    {"coluna": "qtd_matriculas_eti_rede_municipal", "titulo": "Matrículas em tempo integral fomentadas na rede municipal", "faixas": [0, 25, 50, 100, 250],
+     "zero": "no anexo, sem matrícula fomentada", "nulo": "fora do anexo da Portaria 605"},
+    {"coluna": "vl_fomento_eti_rede_municipal", "titulo": "Fomento recebido pela rede municipal", "faixas": [0, 100000, 300000, 600000, 1500000],
+     "zero": "no anexo, sem fomento", "nulo": "fora do anexo da Portaria 605"}
+  ],
+  "tooltip": ["vl_fomento_eti_rede_municipal", "qtd_matriculas_eti_rede_municipal"],
+  "ficha": ["vl_fomento_eti_rede_municipal", "qtd_matriculas_eti_rede_municipal", "registrou_politica_eti_rede_municipal", "qtd_escolas_eti_rede_municipal", "vl_eti_media_por_escola_rede_municipal", "vl_fomento_eti_rede_estadual_est", "afetados_eti"],
+  "tabela": ["vl_fomento_eti_rede_municipal", "qtd_matriculas_eti_rede_municipal", "qtd_escolas_eti_rede_municipal", "vl_eti_media_por_escola_rede_municipal"],
+  "ordem_tabela": "vl_fomento_eti_rede_municipal",
+  "graficos": [
+    {"tipo": "por_uf", "coluna": "vl_fomento_eti_rede_municipal", "titulo": "Fomento às redes municipais, por estado",
+     "subtitulo": "Soma do fomento pago às redes municipais de cada estado. Clique para filtrar.", "ocultar_zero": true,
+     "nota": "O DF não aparece: no ETI é ente estadual."},
+    {"tipo": "por_uf", "coluna": "qtd_matriculas_eti_rede_municipal", "titulo": "Matrículas fomentadas nas redes municipais, por estado",
+     "subtitulo": "Matrículas em tempo integral remuneradas pelo fomento. Clique para filtrar.", "ocultar_zero": true}
+  ],
+
+  "alertas": [
+    {"coluna": "registrou_politica_eti_rede_municipal", "valor": false, "mensagem": "A rede não registrou política de educação integral em tempo integral. Redes nessa situação têm dedução de 45,43% no fomento (Portaria MEC 605/2025, art. 6º)."}
+  ],
+  "textos": ["txt_eti", "txt_afetados_eti"],
+
+  "notas": [
+    "Desde a EC 135/2024 o fomento ETI sai da complementação da União ao Fundeb (Portaria MEC 586/2025): não some este valor ao Fundeb do mesmo ano.",
+    "O fomento remunera matrículas em tempo integral já criadas (Censo 2024 − Censo 2022), com valor por matrícula que varia por rede (de R$ 847 a R$ 12.859; mediana R$ 6.176).",
+    "Matrículas e valores por rede: Anexo da Portaria MEC 605/2025. Pagamento em quatro parcelas, de outubro de 2025 a janeiro de 2026 (cronograma da Portaria MEC 823/2025).",
+    "Sem cor (hachurado): município fora do anexo da Portaria 605. Cinza: está no anexo, mas sem matrícula fomentada.",
+    "Rede estadual no município é rateio do valor do governo estadual pelas matrículas integrais estaduais (estimativa). Média por escola não é o valor que cada escola recebe: o fomento é pago à rede."
+  ],
+  "observacoes": [
+    "30 municípios receberam fomento sem ter escola municipal em tempo integral no Censo 2024 (a média por escola fica vazia). Pode ser diferença entre o Censo e as matrículas declaradas no Simec em 2025: confirme antes de publicar.",
+    "Alunos afetados soma a rede municipal (publicado) e a estadual (rateio), por isso é estimativa. As frases prontas usam só a rede municipal."
+  ],
+  "fontes": [
+    "MEC — Portarias 586, 605 e 823/2025 (Diário Oficial da União)",
+    "INEP — Censo Escolar 2024 (microdados)",
+    "IBGE — malha municipal (API de malhas v3)"
+  ]
+}

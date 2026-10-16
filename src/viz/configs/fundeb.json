@@ -1,0 +1,200 @@
+{
+  "id": "fundeb",
+  "titulo": "Fundeb por município",
+  "subtitulo": "Quanto a rede municipal de cada cidade recebeu do Fundeb em 2025 e que parte desse dinheiro veio da complementação da União (VAAF, VAAT e VAAR).",
+  "ano_ref": 2025,
+  "fonte_tabela": "educacao_municipios_2025",
+  "chave": "cod_ibge_7",
+  "nome": "municipio",
+  "uf": "uf",
+  "metricas": {
+    "vl_fundeb_rede_municipal": {
+      "rotulo": "Receita do Fundeb da rede municipal",
+      "curto": "Fundeb",
+      "formato": "reais",
+      "agregado": "soma"
+    },
+    "vl_fundeb_uniao_rede_municipal": {
+      "rotulo": "Complementação da União",
+      "curto": "Da União",
+      "formato": "reais",
+      "agregado": "soma"
+    },
+    "pct_uniao_rede_municipal": {
+      "rotulo": "Parte do Fundeb que vem da União",
+      "curto": "% União",
+      "formato": "pct",
+      "agregado": {
+        "razao": [
+          "vl_fundeb_uniao_rede_municipal",
+          "vl_fundeb_rede_municipal"
+        ]
+      }
+    },
+    "mat_rede_municipal": {
+      "rotulo": "Matrículas da rede municipal (Censo 2024)",
+      "curto": "Matrículas",
+      "formato": "inteiro",
+      "agregado": "soma"
+    },
+    "vl_fundeb_por_aluno_rede_municipal": {
+      "rotulo": "Fundeb por aluno da rede municipal",
+      "curto": "Por aluno",
+      "formato": "reais",
+      "agregado": {
+        "razao": [
+          "vl_fundeb_rede_municipal",
+          "mat_rede_municipal"
+        ]
+      }
+    },
+    "qtd_escolas_rede_municipal": {
+      "rotulo": "Escolas da rede municipal",
+      "curto": "Escolas",
+      "formato": "inteiro",
+      "agregado": "soma"
+    },
+    "vl_fundeb_media_por_escola_rede_municipal": {
+      "rotulo": "Média por escola municipal",
+      "curto": "Por escola",
+      "formato": "reais",
+      "agregado": {
+        "razao": [
+          "vl_fundeb_rede_municipal",
+          "qtd_escolas_rede_municipal"
+        ]
+      }
+    },
+    "afetados_fundeb_complementacao": {
+      "rotulo": "Alunos em redes que recebem complementação da União",
+      "curto": "Alunos afetados",
+      "formato": "inteiro",
+      "agregado": "soma"
+    },
+    "recebe_vaaf_rede_municipal": {
+      "rotulo": "Recebe VAAF (garante o valor mínimo por aluno no estado)",
+      "curto": "Recebem VAAF",
+      "formato": "booleano",
+      "agregado": "contagem"
+    },
+    "recebe_vaat_rede_municipal": {
+      "rotulo": "Recebe VAAT (complementa redes com menor receita total)",
+      "curto": "Recebem VAAT",
+      "formato": "booleano",
+      "agregado": "contagem"
+    },
+    "recebe_vaar_rede_municipal": {
+      "rotulo": "Recebe VAAR (condicionado a indicadores e condicionalidades)",
+      "curto": "Recebem VAAR",
+      "formato": "booleano",
+      "agregado": "contagem"
+    },
+    "vl_fundeb_rede_estadual_est": {
+      "rotulo": "Fundeb da rede estadual no município",
+      "curto": "Rede estadual",
+      "formato": "reais",
+      "agregado": "soma"
+    }
+  },
+  "resumo": [
+    "vl_fundeb_rede_municipal",
+    "vl_fundeb_uniao_rede_municipal",
+    "pct_uniao_rede_municipal",
+    "recebe_vaaf_rede_municipal",
+    "recebe_vaat_rede_municipal",
+    "recebe_vaar_rede_municipal"
+  ],
+  "mapa": [
+    {
+      "coluna": "pct_uniao_rede_municipal",
+      "titulo": "Parte do Fundeb municipal que vem da União",
+      "faixas": [
+        0,
+        0.1,
+        0.25,
+        0.4,
+        0.5
+      ],
+      "zero": "sem complementação"
+    },
+    {
+      "coluna": "vl_fundeb_por_aluno_rede_municipal",
+      "titulo": "Fundeb por aluno da rede municipal",
+      "faixas": [
+        8000,
+        9000,
+        10000,
+        12000
+      ]
+    }
+  ],
+  "tooltip": [
+    "pct_uniao_rede_municipal",
+    "vl_fundeb_uniao_rede_municipal",
+    "vl_fundeb_rede_municipal"
+  ],
+  "ficha": [
+    "vl_fundeb_rede_municipal",
+    "vl_fundeb_uniao_rede_municipal",
+    "pct_uniao_rede_municipal",
+    "recebe_vaaf_rede_municipal",
+    "recebe_vaat_rede_municipal",
+    "recebe_vaar_rede_municipal",
+    "afetados_fundeb_complementacao",
+    "mat_rede_municipal",
+    "vl_fundeb_por_aluno_rede_municipal",
+    "qtd_escolas_rede_municipal",
+    "vl_fundeb_media_por_escola_rede_municipal",
+    "vl_fundeb_rede_estadual_est"
+  ],
+  "tabela": [
+    "vl_fundeb_rede_municipal",
+    "vl_fundeb_uniao_rede_municipal",
+    "pct_uniao_rede_municipal",
+    "mat_rede_municipal",
+    "afetados_fundeb_complementacao",
+    "vl_fundeb_por_aluno_rede_municipal"
+  ],
+  "ordem_tabela": "pct_uniao_rede_municipal",
+  "graficos": [
+    {
+      "tipo": "por_uf",
+      "coluna": "pct_uniao_rede_municipal",
+      "titulo": "Peso da União no Fundeb municipal, por estado",
+      "subtitulo": "Complementação da União ÷ receita do Fundeb, somando as redes municipais de cada estado. Clique para filtrar.",
+      "nota": "O DF não aparece: não tem rede municipal no Fundeb."
+    },
+    {
+      "tipo": "por_uf",
+      "coluna": "vl_fundeb_uniao_rede_municipal",
+      "titulo": "Complementação da União por estado",
+      "subtitulo": "Valor recebido pelas redes municipais em 2025. Clique para filtrar.",
+      "ocultar_zero": true
+    }
+  ],
+  "alertas": [
+    {
+      "coluna": "recebe_vaar_rede_municipal",
+      "mensagem": "A rede recebe VAAR, parcela que depende de condicionalidades: pode deixar de receber se não as cumprir."
+    }
+  ],
+  "textos": [
+    "txt_fundeb_uniao",
+    "txt_afetados_fundeb"
+  ],
+  "notas": [
+    "Valores em base de caixa (repasses efetivos de 2025): janeiro inclui a 13ª parcela da complementação de 2024.",
+    "A complementação da União soma VAAF, VAAT e VAAR. O fomento à Escola em Tempo Integral, que também sai dessa complementação, fica de fora para não contar duas vezes.",
+    "Fundeb por aluno usa matrículas do Censo 2024 sem a ponderação do Fundeb — é uma aproximação (estimativa).",
+    "Rede estadual no município é rateio do repasse ao governo estadual pelas matrículas (estimativa). Média por escola não é o valor que cada escola recebe.",
+    "Brasília (DF) e Fernando de Noronha (PE) não têm rede municipal no Fundeb."
+  ],
+  "observacoes": [
+    "Fundeb por aluno é uma estimativa (receita ÷ matrículas sem ponderação). Metade dos municípios fica entre R$ 8.333 e R$ 10.450 por aluno (mediana R$ 9.282). Valores muito distantes disso — acima de cerca de R$ 13.600 ou abaixo de R$ 5.200, 185 municípios — tendem a refletir o método (matrícula sem ponderação, conveniadas de fora, base de caixa), não diferença real de financiamento: confirme antes de publicar."
+  ],
+  "fontes": [
+    "Tesouro Nacional — API de Transferências Constitucionais (Fundeb, 2025)",
+    "INEP — Censo Escolar 2024 (microdados)",
+    "IBGE — malha municipal (API de malhas v3)"
+  ]
+}

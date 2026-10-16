@@ -1,0 +1,142 @@
+{
+  "id": "pe_de_meia",
+  "titulo": "Pé-de-Meia por município",
+  "subtitulo": "Estudantes do ensino médio público que receberam o incentivo no ano letivo de 2025, quanto foi pago e que parte das matrículas o programa alcança.",
+  "ano_ref": 2025,
+  "fonte_tabela": "educacao_municipios_2025",
+  "chave": "cod_ibge_7",
+  "nome": "municipio",
+  "uf": "uf",
+  "metricas": {
+    "qtd_beneficiarios_pe_de_meia": {
+      "rotulo": "Estudantes beneficiários",
+      "curto": "Beneficiários",
+      "formato": "inteiro",
+      "agregado": "soma"
+    },
+    "vl_pago_pe_de_meia": {
+      "rotulo": "Valor pago",
+      "formato": "reais",
+      "agregado": "soma"
+    },
+    "vl_por_aluno_pe_de_meia": {
+      "rotulo": "Valor por estudante",
+      "curto": "Por estudante",
+      "formato": "reais",
+      "agregado": {
+        "razao": [
+          "vl_pago_pe_de_meia",
+          "qtd_beneficiarios_pe_de_meia"
+        ]
+      }
+    },
+    "vl_conclusao_pe_de_meia": {
+      "rotulo": "Depositado como poupança (conclusão)",
+      "formato": "reais",
+      "agregado": "soma"
+    },
+    "mat_em_publico": {
+      "rotulo": "Matrículas no ensino médio público (Censo 2024)",
+      "curto": "Matrículas EM",
+      "formato": "inteiro",
+      "agregado": "soma"
+    },
+    "razao_pe_de_meia_censo": {
+      "rotulo": "Alcance (beneficiários ÷ matrículas)",
+      "curto": "Alcance",
+      "formato": "pct",
+      "agregado": {
+        "razao": [
+          "qtd_beneficiarios_pe_de_meia",
+          "mat_em_publico"
+        ]
+      }
+    }
+  },
+  "resumo": [
+    "qtd_beneficiarios_pe_de_meia",
+    "vl_pago_pe_de_meia",
+    "razao_pe_de_meia_censo",
+    "vl_conclusao_pe_de_meia"
+  ],
+  "mapa": [
+    {
+      "coluna": "razao_pe_de_meia_censo",
+      "titulo": "Alcance: beneficiários para cada 100 matrículas",
+      "faixas": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ]
+    },
+    {
+      "coluna": "vl_por_aluno_pe_de_meia",
+      "titulo": "Valor médio por estudante",
+      "faixas": [
+        2300,
+        2500,
+        2700,
+        2900
+      ]
+    }
+  ],
+  "tooltip": [
+    "qtd_beneficiarios_pe_de_meia",
+    "vl_pago_pe_de_meia"
+  ],
+  "ficha": [
+    "qtd_beneficiarios_pe_de_meia",
+    "vl_pago_pe_de_meia",
+    "vl_por_aluno_pe_de_meia",
+    "vl_conclusao_pe_de_meia",
+    "mat_em_publico",
+    "razao_pe_de_meia_censo"
+  ],
+  "tabela": [
+    "qtd_beneficiarios_pe_de_meia",
+    "vl_pago_pe_de_meia",
+    "vl_por_aluno_pe_de_meia",
+    "mat_em_publico",
+    "razao_pe_de_meia_censo"
+  ],
+  "ordem_tabela": "qtd_beneficiarios_pe_de_meia",
+  "graficos": [
+    {
+      "tipo": "por_uf",
+      "coluna": "vl_pago_pe_de_meia",
+      "titulo": "Valor pago por estado",
+      "subtitulo": "Soma do valor pago aos estudantes no ano letivo. Clique em um estado para filtrar."
+    },
+    {
+      "tipo": "por_uf",
+      "coluna": "razao_pe_de_meia_censo",
+      "titulo": "Alcance por estado",
+      "subtitulo": "Beneficiários ÷ matrículas no ensino médio público, somados por estado. Clique para filtrar.",
+      "nota": "Beneficiários de 2025 sobre matrículas do Censo 2024."
+    }
+  ],
+  "alertas": [
+    {
+      "coluna": "flag_pe_de_meia_acima_censo",
+      "mensagem": "Há mais beneficiários (2025) do que matrículas no ensino médio público no Censo 2024. Os anos são diferentes: confira antes de publicar."
+    }
+  ],
+  "textos": [
+    "txt_pe_de_meia",
+    "txt_afetados_pe_de_meia"
+  ],
+  "notas": [
+    "Beneficiários = parcelas de matrícula do ano letivo 2025 (uma por estudante). A fonte não permite identificar cada estudante, então é uma aproximação.",
+    "O valor pago inclui a parcela de conclusão (R$ 1.000 por ano concluído), depositada em poupança e não sacável no ano. Valores líquidos de estornos.",
+    "Matrículas vêm do Censo Escolar 2024, o mais recente publicado; os beneficiários são de 2025."
+  ],
+  "observacoes": [
+    "Em 44 municípios há mais beneficiários (2025) do que matrículas no ensino médio público (Censo 2024); o maior caso é Natalândia (MG), com 2,58 beneficiários por matrícula. Pode ser diferença de ano, estudante registrado em outro município ou erro de cadastro. Esses municípios trazem um aviso na ficha: confirme antes de publicar o número."
+  ],
+  "fontes": [
+    "CGU — Portal da Transparência, Pé-de-Meia (arquivos mensais)",
+    "INEP — Censo Escolar 2024 (microdados)",
+    "IBGE — malha municipal (API de malhas v3)"
+  ]
+}

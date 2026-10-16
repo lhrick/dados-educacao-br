@@ -153,6 +153,24 @@ para revisão).
 | R4 | Textos de risco (`txt_afetados_*`) para Pé-de-Meia, Fundeb, ETI | incluir PNLD | PNLD é estimativa | U (escopo) / T (PNLD fora) |
 | R5 | Valores em texto com escala (MIL/MILHÕES/BILHÕES, 1 casa) | valor exato | padrão do CLAUDE.md ("R$ {x} MILHÕES") | T |
 
+### 5.7 Visualização (2026-10-16)
+
+| # | Decisão | Alternativas | Motivo | Quem |
+|---|---|---|---|---|
+| V1 | Só páginas HTML interativas (`docs/explorador/`) | gráficos estáticos matplotlib (PNG/SVG); Plotly; Folium; Streamlit; Datawrapper | exploração por município (busca + ficha); estáticos foram feitos e descartados | U |
+| V2 | Template genérico + config JSON por programa | uma página escrita para cada programa | reaproveitar em outro projeto (ex.: Saúde, mesma chave `cod_ibge_7`); metadados vêm do dicionário | U |
+| V3 | HTML único, sem build e sem biblioteca externa; mapa em SVG projetado no Python | D3/Leaflet via CDN | abre offline e por cópia de arquivo; nada a fixar de versão | T |
+| V4 | Malha IBGE v3 (qualidade mínima), SIRGAS 2000 Polyconic, `shapely.coverage_simplify` (tolerância 4000) | simplificação polígono a polígono | a simplificação isolada abria frestas entre vizinhos; divisas estaduais = união dos municípios simplificados | T |
+| V5 | Páginas para Pé-de-Meia, Fundeb e ETI; **PNLD fora** | página municipal do PNLD | PNLD municipal é 100% rateio (correlação 0,998 com alunos); passaria precisão que não existe | U |
+| V6 | Uso interno do time; sem seção de gráficos de conferência | dispersão Pé-de-Meia × Censo e histograma do Fundeb por aluno | limitações ficam em "Observações" no rodapé e em avisos na ficha | U |
+| V7 | Colunas `estimativa` com selo em resumo, mapa, ficha e gráficos; `*` na tabela | esconder estimativas | rede estadual e Fundeb por aluno são úteis, mas não podem parecer oficiais | T |
+| V8 | ETI: vazio = "fora do anexo da Portaria 605"; zero = "no anexo, sem matrícula fomentada" | "sem dado" para ambos | são situações diferentes da rede | T |
+| V9 | Comparação UF/Brasil por razão das somas (ex.: % União = Σ União ÷ Σ receita); média por escola do ETI por mediana | média simples dos municípios | razão das somas é o valor do estado; na ETI a soma de escolas inclui municípios sem fomento e subestimava a média | T |
+| V10 | HTMLs gerados versionados no repositório (~6 MB) | só o código | o time abre sem rodar o pipeline | U |
+
+Números citados nas notas das configs (ex.: "44 municípios", faixas do Fundeb por aluno) são de 2025 e
+precisam ser revistos quando a tabela for regerada.
+
 ---
 
 ## 6. Trade-offs e limitações (o que ler antes de publicar)
@@ -251,5 +269,4 @@ Os números exatos e atualizados ficam em `docs/programas.md` e no relatório de
 - [ ] **Total oficial do Pé-de-Meia 2025** para conferência nacional.
 - [ ] **ETI 2026** — confirmar se haverá fomento separado (Resolução CIF 23/2026) ou só obrigação no Fundeb.
 - [ ] 30 municípios com fomento ETI sem escola municipal integral no Censo 2024 — conferir caso a caso.
-- [ ] Commit inicial do repositório (nada foi commitado até aqui).
 - [ ] Frente de Saúde (pausada; ver CLAUDE.md).
