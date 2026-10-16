@@ -1,0 +1,31 @@
+# Pé-de-Meia — downloads manuais (CGU / Portal da Transparência)
+# Salvar cada zip, sem renomear, em: data/raw/cgu/pe_de_meia/
+# Depois rodar: .venv/bin/python -m src.ingest.pe_de_meia
+# Meses publicados em 2026-10-15 (não existem 202407 e 202601)
+
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202403_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202404_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202405_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202406_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202408_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202409_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202410_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202411_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202412_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202501_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202502_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202503_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202504_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202505_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202506_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202507_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202508_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202509_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202510_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202511_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202512_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202602_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202603_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202604_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202605_PeDeMeia.zip
+https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/pe-de-meia/202606_PeDeMeia.zip

@@ -1,0 +1,15 @@
+# Ambiente
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Dados (brutos e derivados não são versionados; manifest sim)
+data/raw/*
+!data/raw/_manifest.csv
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+certs/_bundle.crt
+CLAUDE.md
